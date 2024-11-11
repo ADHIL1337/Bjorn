@@ -28,6 +28,10 @@ from webapp import web_thread, handle_exit_web
 from orchestrator import Orchestrator
 from logger import Logger
 
+# Import AI-related modules
+import pwnagotchi.ai as ai
+from pwnagotchi.ai.epoch import Epoch
+
 logger = Logger(name="Bjorn.py", level=logging.DEBUG)
 
 class Bjorn:
@@ -37,6 +41,9 @@ class Bjorn:
         self.commentaire_ia = Commentaireia()
         self.orchestrator_thread = None
         self.orchestrator = None
+        # Initialize AI model
+        self.epoch = Epoch(shared_data)
+        self.ai_model = ai.load(shared_data, None, self.epoch)
 
     def run(self):
         """Main loop for Bjorn. Waits for Wi-Fi connection and starts Orchestrator."""
@@ -49,9 +56,9 @@ class Bjorn:
         while not self.shared_data.should_exit:
             if not self.shared_data.manual_mode:
                 self.check_and_start_orchestrator()
+                # Use AI model for decision making
+                self.ai_decision_making()
             time.sleep(10)  # Main loop idle waiting
-
-
 
     def check_and_start_orchestrator(self):
         """Check Wi-Fi and start the orchestrator if connected."""
@@ -101,7 +108,12 @@ class Bjorn:
         self.wifi_connected = 'yes' in result
         return self.wifi_connected
 
-    
+    def ai_decision_making(self):
+        """Use AI model for decision making."""
+        if self.ai_model:
+            observation = self.epoch.observe([], [])  # Replace with actual observations
+            self.ai_model.predict(observation)
+
     @staticmethod
     def start_display():
         """Start the display thread"""
@@ -125,7 +137,6 @@ def handle_exit(sig, frame, display_thread, bjorn_thread, web_thread):
         web_thread.join()
     logger.info("Main loop finished. Clean exit.")
     sys.exit(0)  # Used sys.exit(0) instead of exit(0)
-
 
 
 if __name__ == "__main__":
